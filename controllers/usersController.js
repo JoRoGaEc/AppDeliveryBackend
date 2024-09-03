@@ -46,15 +46,35 @@ const User = require('../models/user'); //sin el JS
 module.exports = {
     async getAll(req, res, next) {
         try {
-            const data = await User.getAll();
+            const data = await User.getAll(); //await takes time the method is executed for continue with the next line.
             console.log(`Usuarios: ${data}`);
             return res.status(200).json(data);
         } catch (error) {
             console.log(`Error: ${error}`);
             return res.status(501).json({
                 success: false,
-                message: 'Error al obtener los usuarios'
+                message: 'Error retrieving users.'
+            });
+        }
+    },
+
+
+    async register(req, res, next) {
+        try {
+            const user = req.body;
+            const data = await User.create(user); //What is returned by de created user.
+            return res.status(201).json({
+                success: true,
+                message: 'The registration was successful.',
+                data:data.id
+            });
+        } catch (error) {
+            console.log(`Error: ${error}`);
+            return res.status(501).json({
+                success: false,
+                message: 'The registration has failed.',
+                error: error
             });
         }
     }
-}; // Exportar todo el objeto todo el archivo
+}; // Export all the object
