@@ -1,0 +1,18 @@
+# Ignorar archivos de configuración locales
+*.config
+*.env
+
+# Ignorar directorio de dependencias
+/node_modules
+
+# Ignorar archivos de compilación
+/dist
+/build
+
+# Ignorar archivos temporales
+*.log
+*.tmp
+
+# Ignorar IDEs o editores específicos
+/.vscode
+/.idea
