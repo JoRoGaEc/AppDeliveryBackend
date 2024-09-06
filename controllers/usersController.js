@@ -1,48 +1,8 @@
 const User = require('../models/user'); //sin el JS
+const bcrypt =  require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const keys =  require('../config/keys');
 
-/**
- * @swagger
- * tags:
- *   name: Users
- *   description: Manage Users endpoints.
- */
-
-/**
- * @swagger
- * /api/users/getAll:
- *   get:
- *     summary: Retrieve all users
- *     tags: [Users]  # Make sure this tag is present to asociate this enpoint to "Users" group.
- *     responses:
- *       200:
- *         description: Users List
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: integer
- *                     example: 1
- *                   name:
- *                     type: string
- *                     example: John Doe
- *       501:
- *         description: Error retrieving users
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Error retrieving users
- */
 module.exports = {
     async getAll(req, res, next) {
         try {
@@ -66,8 +26,61 @@ module.exports = {
             return res.status(201).json({
                 success: true,
                 message: 'The registration was successful.',
-                data:data.id
+                data: {
+                    'id':data.id
+                }
             });
+        } catch (error) {
+            console.log(`Error: ${error}`);
+            return res.status(501).json({
+                success: false,
+                message: 'The registration has failed.',
+                error: error
+            });
+        }
+    },
+
+    async login(req, res, next){
+        try {
+            const email =  req.body.email;
+            const password =  req.body.password;
+
+            const myUser = await User.findByEmail(email);
+
+            if(!myUser){
+                return res.status(401).json({
+                    success: false, 
+                    message: 'Not user found with that email'
+                })
+            }
+            //To validate the password
+            const isPasswordValid =  await bcrypt.compare(password, myUser.password);
+            if(isPasswordValid){
+                const token =  jwt.sign({id: myUser.id, email: myUser.email}, keys.secretOrKey, {
+                    //expiresIn
+                })
+                const data = {
+                    id: myUser.id,
+                    name: myUser.name,
+                    lastname: myUser.lastname,
+                    email: myUser.email,
+                    phone: myUser.phone,
+                    image: myUser.image,
+                    session_token: `JWT ${token}`
+                };
+
+                return res.status(201).json({
+                    success: true, 
+                    message: 'The user has been authenticated',
+                    data: data
+                })
+            }else{
+                return res.status(401).json({
+                    success: false, 
+                    message: 'The password is not valid'
+                })
+            }
+
         } catch (error) {
             console.log(`Error: ${error}`);
             return res.status(501).json({

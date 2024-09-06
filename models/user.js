@@ -1,4 +1,5 @@
 const db =  require('../config/config'); //para poder hacer las sentencias SQL
+const bcrypt = require('bcryptjs')
 
 const User =  {};
 
@@ -9,8 +10,30 @@ User.getAll = () => {
         FROM users`;
         return db.manyOrNone(sql);
 }
+User.findByEmail = (email) => {
+    const sql =`
+        SELECT id, email, name, lastname, image, phone, password, session_token 
+            FROM users
+        WHERE email = $1;
+    `;
+    return db.oneOrNone(sql, email);
+}
 
-User.create = (user) => {
+User.finById = (id, callback) => {
+    const sql =`
+        SELECT id, email, name, lastname, image, phone, password, session_token 
+            FROM users
+        WHERE id = $1;
+    `;
+    return db.oneOrNone(sql, id).then(user =>{
+        callback(null, user)
+    });
+}
+
+User.create = async (user) => {
+
+    const hash = await bcrypt.hash(user.password, 10)
+
     const sql = `INSERT INTO 
         users(
             email,
@@ -29,7 +52,7 @@ User.create = (user) => {
         user.lastname,
         user.phone, 
         user.image,
-        user.password,
+        hash,
         new Date(),
         new Date()
     ]);
