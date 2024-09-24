@@ -1,4 +1,5 @@
 const User = require('../models/user'); //sin el JS
+const Rol = require('../models/rol');
 const bcrypt =  require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const keys =  require('../config/keys');
@@ -23,12 +24,25 @@ module.exports = {
         try {
             const user = req.body;
             const data = await User.create(user); //What is returned by de created user.
+            //Asign the rol to the user.
+            await Rol.create(data.id, 1);
+
+            const token =  jwt.sign({id: data.id, email: user.email}, keys.secretOrKey, {
+                //expiresIn
+            })
+            const mydData = {
+                id: data.id,
+                name: user.name,
+                lastname: user.lastname,
+                email: user.email,
+                phone: user.phone,
+                image: user.image,
+                session_token: `JWT ${token}`
+            };
             return res.status(201).json({
                 success: true,
                 message: 'The registration was successful.',
-                data: {
-                    'id':data.id
-                }
+                data: mydData
             });
         } catch (error) {
             console.log(`Error: ${error}`);
